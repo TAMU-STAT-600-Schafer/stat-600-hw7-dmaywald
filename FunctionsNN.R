@@ -7,9 +7,16 @@
 # seed - specified seed to use before random normal draws
 initialize_bw <- function(p, hidden_p, K, scale = 1e-3, seed = 12345){
   # [ToDo] Initialize intercepts as zeros
+  # Intercepts are zero
+  b1 = rep(0, hidden_p)
+  b2 = rep(0, K)
   
   # [ToDo] Initialize weights by drawing them iid from Normal
   # with mean zero and scale as sd
+  
+  set.seed(seed)
+  W1 = scale * matrix(rnorm(p * hidden_p), p, hidden_p)
+  W2 = scale * matrix(rnorm(hidden_p * K), hidden_p, K)
   
   # Return
   return(list(b1 = b1, b2 = b2, W1 = W1, W2 = W2))
@@ -24,11 +31,20 @@ initialize_bw <- function(p, hidden_p, K, scale = 1e-3, seed = 12345){
 loss_grad_scores <- function(y, scores, K){
   
   # [ToDo] Calculate loss when lambda = 0
-  # loss = ...
+  expScores = exp(Scores)
+  probs = expScores / rowSums(expScores)
+  
+  loss = 0
+  
+  for (i in 1:K) {
+    loss = loss + sum(log(probs[y == (i-1), i]))
+  }
+  
+  loss = (-1/length(y)) * loss
   
   # [ToDo] Calculate misclassification error rate (%)
   # when predicting class labels using scores versus true y
-  # error = ...
+  error = 100 * (1 - mean(max.col(probs) == (y+1)))
   
   # [ToDo] Calculate gradient of loss with respect to scores (output)
   # when lambda = 0
