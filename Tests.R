@@ -76,7 +76,7 @@ for (i in 1:n) {
   y[i] = sample.int(K, size = 1, prob = true_probs[i, ]) - 1
 }
 
-loss_grad_scores(y, scores = scores_true, K = K)
+out = loss_grad_scores(y, scores = scores_true, K = K)
 
 
 ######################## Test Function one pass ################################
@@ -88,13 +88,13 @@ pass$grads$dW2
 
 
 ######################### Test Function NN_train ###############################
-p = 5
-hidden_p = 10
-K = 3
-n = 2200
+p = 15
+hidden_p = 20
+K = 2
+n = 1200
 nval = 200
 sd_val = 5
-drop_out_rate = .25
+drop_out_rate = .5
 
 # Calculate the probabilities of each class by assigning "true" parameters to pass 
 # through a fully connected NN. 
@@ -148,7 +148,7 @@ yval = ydata[(n-nval+1):n]
 Xtrain = Xdata[1:(n-nval), , drop = FALSE]
 ytrain = ydata[1:(n-nval)]
 
-out = NN_train(X = Xtrain, y = ytrain, Xval = Xval, yval = yval, lambda = .01, rate = .01, 
-         mbatch = 20, nEpoch = 100, hidden_p = hidden_p, scale = 1e-3, seed = 12345)
+out = NN_train(X = Xtrain, y = ytrain, Xval = Xval, yval = yval, lambda = .05, rate = .1, 
+         mbatch = 20, nEpoch = 500, hidden_p = hidden_p, scale = 1e-3, seed = 12345)
 
 

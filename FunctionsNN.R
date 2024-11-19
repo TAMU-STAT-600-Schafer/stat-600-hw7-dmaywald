@@ -59,10 +59,10 @@ loss_grad_scores <- function(y, scores, K){
   
   # [ToDo] Calculate gradient of loss with respect to scores (output)
   # when lambda = 0
-  one_hot_mat = matrix(1 -  model.matrix(~ -1+factor(y, levels = 0:(K-1))), nrow = n)
+  one_hot_mat = matrix(model.matrix(~ -1+factor(y, levels = 0:(K-1))), nrow = n)
   
   
-  grad = probs * one_hot_mat
+  grad = (probs - one_hot_mat)/n
   
   
   # Return loss, gradient and misclassification error on training (in %)
@@ -160,13 +160,14 @@ one_pass <- function(X, y, K, W1, b1, W2, b2, lambda){
 
   # Get gradient for 2nd layer W2, b2 (use lambda as needed)
   dW2 = crossprod(H, out$grad) + lambda*W2
-  db2 = rowSums(out$grad)
+  db2 = colSums(out$grad)
   
   # Get gradient for hidden, and 1st layer W1, b1 (use lambda as needed)
   dH  = tcrossprod(out$grad, W2)
-  dA1 = (abs(dH) + dH)/2
-  dW1 = crossprod(X, dA1) + lambda*W1
-  db1 = colSums(dA1)
+  dH[H == 0] = 0
+  dW1 = crossprod(X, dH) + lambda*W1
+  db1 = colSums(dH)
+  
   
   # Return output (loss and error from forward pass,
   # list of gradients from backward pass)
@@ -268,6 +269,7 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
       b2 <- b2 - rate * pass$grads$db2
       
     }
+    # print(pass$grads$db2)
     # [ToDo] In the end of epoch, evaluate
     # - average training error across batches
     error[i] = cur_err/nBatch
