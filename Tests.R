@@ -221,30 +221,29 @@ microbenchmark(
 
 
 ######################### Test Function NN_train ###############################
-p = 15
-hidden_p = 30
-K = 10
-n = round(runif(1, 500, 1000))
-nval = round(n/6)
-sd_val = 2
-drop_out_rate = .5
-lambda = runif(1, 1e-4, 9e-2)
+for (i in 1:5) {
+  test_that("Check convergence of Neural Network training",{
+    p = round(runif(1, 5, 12))
+    hidden_p = round(runif(1, 5, 20))
+    K = round(runif(1, 5, 10))
+    n = round(runif(1, 100, 500))
+    sd_val = runif(1, 1, 3)
+    drop_out_rate = runif(1, .5, .9)
+    lambda = runif(1, 1e-4, 9e-2)
+    
+    params <- gen_data(p = p, hidden_p = hidden_p, K = K, n = n,
+                       sd_val = sd_val, drop_out_rate = drop_out_rate, nval = nval)
+    
+    out = NN_train(X = params$X, y = params$y, Xval = params$Xval, yval = params$yval,
+                   lambda = lambda, rate = .1, mbatch = 20, nEpoch = 100,
+                   hidden_p = hidden_p, scale = 1e-3, seed = 12345)
+    
+    
+    
+    # Regress log(error) on epochs and look at slope coefficient. 
+    # If slope coefficient is negative, then error goes down over epochs
+    model_mat <- cbind(1, 1:length(out$error))
+    expect_true(solve(crossprod(model_mat), crossprod(model_mat, log(out$error)))[2] < 0)
+  })
+}
 
-params <- gen_data(p = p, hidden_p = hidden_p, K = K, n = n,
-                   sd_val = sd_val, drop_out_rate = drop_out_rate, nval = nval)
-
-out = NN_train(X = params$X, y = params$y, Xval = params$Xval, yval = params$yval,
-               lambda = lambda, rate = .1, mbatch = 20, nEpoch = 100,
-               hidden_p = hidden_p, scale = 1e-3, seed = 12345)
-
-
-
-# Regress log(error) on epochs and look at slope coefficient. 
-# If slope coefficient is negative, then error goes down over epochs
-model_mat <- cbind(1, 1:length(out$error))
-expect_true(solve(crossprod(model_mat), crossprod(model_mat, log(out$error)))[2] < 0)
-
-
-profvis::profvis(NN_train(X = params$X, y = params$y, Xval = params$Xval, yval = params$yval,
-                         lambda = lambda, rate = .1, mbatch = 20, nEpoch = 100,
-                         hidden_p = hidden_p, scale = 1e-3, seed = 12345))
