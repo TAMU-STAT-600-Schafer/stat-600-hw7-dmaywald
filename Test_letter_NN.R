@@ -48,3 +48,12 @@ test_error # 16.1
 
 # [ToDo] Try changing the parameters above to obtain a better performance,
 # this will likely take several trials
+out3 = NN_train(Xtrain, Ytrain, Xval, Yval, lambda = .001,
+                rate = 0.15, mbatch = 50, nEpoch = 150,
+                hidden_p = 100, scale = 1e-3, seed = 12345)
+plot(1:length(out3$error), out3$error, ylim = c(0, 70))
+lines(1:length(out3$error_val), out3$error_val, col = "red")
+
+# Evaluate error on testing data
+test_error = evaluate_error(Xt, Yt, out3$params$W1, out3$params$b1, out3$params$W2, out3$params$b2)
+test_error # 16.1

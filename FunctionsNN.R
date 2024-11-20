@@ -35,11 +35,11 @@ loss_grad_scores <- function(y, scores, K){
   expScores = exp(scores)
   probs = expScores / rowSums(expScores)
   
-  # Sometimes values in scores_true are too large and result in NaN in true_probs
-  # If this occurs, find NaN values and replace with 1
-  if (anyNA(probs)) {
-    probs[is.na(probs)] <- 1
-  }
+  # # Sometimes values in scores_true are too large and result in NaN in true_probs
+  # # If this occurs, find NaN values and replace with 1
+  # if (anyNA(probs)) {
+  #   probs[is.na(probs)] <- 1
+  # }
   
   loss = 0
   
@@ -55,14 +55,16 @@ loss_grad_scores <- function(y, scores, K){
   # scores are less likely to have "tie breakers" needed
   # not a perfect solution, sometimes tie breakers are still needed
   # "tie breakers" are done by selecting the first column containing the minimal value
-  error = 100 * (1 - mean(max.col(scores) == (y+1)))
+  error = 100 * (1 - mean(.Internal(max.col(scores, 1)) == (y+1)))
   
-  # [ToDo] Calculate gradient of loss with respect to scores (output)
-  # when lambda = 0
-  one_hot_mat = matrix(model.matrix(~ -1+factor(y, levels = 0:(K-1))), nrow = n)
+  grad = probs
   
+  for (i in 1:K) {
+    idx = y == (i-1)
+    grad[idx,i] <- grad[idx,i] - 1
+  }
   
-  grad = (probs - one_hot_mat)/n
+  grad = grad/n
   
   
   # Return loss, gradient and misclassification error on training (in %)
@@ -77,11 +79,11 @@ loss_grad_scores_2 <- function(y, scores, K){
   expScores = exp(scores)
   probs = expScores / rowSums(expScores)
   
-  # Sometimes values in scores_true are too large and result in NaN in true_probs
-  # If this occurs, find NaN values and replace with 1
-  if (anyNA(probs)) {
-    probs[is.na(probs)] <- 1
-  }
+  # # Sometimes values in scores_true are too large and result in NaN in true_probs
+  # # If this occurs, find NaN values and replace with 1
+  # if (anyNA(probs)) {
+  #   probs[is.na(probs)] <- 1
+  # }
   
   loss = 0
   
@@ -99,16 +101,8 @@ loss_grad_scores_2 <- function(y, scores, K){
   # "tie breakers" are done by selecting the first column containing the minimal value
   # error = 100 * (1 - mean(max.col(scores) == (y+1)))
   
-  error = 0
+  error = 100 * (1 - mean(.Internal(max.col(scores, 1)) == (y+1)))
   
-  for (i in 1:n) {
-    # if the i'th row of scores does not have the i'th classification of y, then increase error count
-    if(!any(which(scores[i, ] == max(scores[i, ])) == (y+1))){
-      error = error + 1
-    }
-  }
-  
-  error = 100*(error/n)
   
   # [ToDo] Calculate gradient of loss with respect to scores (output)
   # when lambda = 0
@@ -117,13 +111,15 @@ loss_grad_scores_2 <- function(y, scores, K){
   # but "table(y)/n" will not make a save counts of classifications that does
   # not appear
   # Ex: if y = c(0,0,2,3,4), then table(y)/n gives ".4 .2 .2 .2" instead of ".4 0 .2 .2 .2"
-  mean_counts = rep(0, K)
   
-  for (i in 0:(K-1)) {
-    mean_counts[i] = mean(y == i)
+  grad = probs/n
+  
+  n.inv = 1/n
+  
+  for (i in 1:K) {
+    idx = y == (i-1)
+    grad[idx,i] <- grad[idx,i] - n.inv
   }
-  
-  grad = colMeans(probs) - mean_counts
   
   
   # Return loss, gradient and misclassification error on training (in %)
@@ -140,13 +136,13 @@ loss_grad_scores_2 <- function(y, scores, K){
 # b2 - a vector of size K of intercepts
 # lambda - a non-negative scalar, ridge parameter for gradient calculations
 one_pass <- function(X, y, K, W1, b1, W2, b2, lambda){
-
   # [To Do] Forward pass
   # From input to hidden and add bias
   H <- X %*% W1 + matrix(b1, nrow = length(y), ncol = length(b1), byrow = T)
   
   # ReLU
-  H = (abs(H) + H)/2
+  idx = H < 0
+  H[idx] <- 0
   
   # From hidden to output scores
   # print(dim(H))
@@ -157,14 +153,50 @@ one_pass <- function(X, y, K, W1, b1, W2, b2, lambda){
   # [ToDo] Backward pass
   # Get loss, error, gradient at current scores using loss_grad_scores function
   out = loss_grad_scores(y, scores, K)
-
+  
   # Get gradient for 2nd layer W2, b2 (use lambda as needed)
   dW2 = crossprod(H, out$grad) + lambda*W2
   db2 = colSums(out$grad)
   
   # Get gradient for hidden, and 1st layer W1, b1 (use lambda as needed)
   dH  = tcrossprod(out$grad, W2)
-  dH[H == 0] = 0
+  dH[idx] = 0
+  dW1 = crossprod(X, dH) + lambda*W1
+  db1 = colSums(dH)
+  
+  
+  # Return output (loss and error from forward pass,
+  # list of gradients from backward pass)
+  return(list(loss = out$loss, error = out$error, grads = list(dW1 = dW1, db1 = db1, dW2 = dW2, db2 = db2)))
+}
+
+one_pass_2 <- function(X, y, K, W1, b1, W2, b2, lambda){
+  
+  # [To Do] Forward pass
+  # From input to hidden and add bias
+  H <- X %*% W1 + matrix(b1, nrow = length(y), ncol = length(b1), byrow = T)
+  
+  # ReLU
+  idx = H < 0
+  H[idx] <- 0
+  
+  # From hidden to output scores
+  # print(dim(H))
+  # print(dim(W2))
+  # print(dim(matrix(b2, nrow = length(y), ncol = length(b2), byrow = T)))
+  scores = H %*% W2 + matrix(b2, nrow = nrow(H), ncol = ncol(W2), byrow = T)
+  
+  # [ToDo] Backward pass
+  # Get loss, error, gradient at current scores using loss_grad_scores function
+  out = loss_grad_scores(y, scores, K)
+  
+  # Get gradient for 2nd layer W2, b2 (use lambda as needed)
+  dW2 = crossprod(H, out$grad) + lambda*W2
+  db2 = colSums(out$grad)
+  
+  # Get gradient for hidden, and 1st layer W1, b1 (use lambda as needed)
+  dH  = tcrossprod(out$grad, W2)
+  dH[idx] = 0
   dW1 = crossprod(X, dH) + lambda*W1
   db1 = colSums(dH)
   
@@ -196,7 +228,7 @@ evaluate_error <- function(Xval, yval, W1, b1, W2, b2){
   
   # [ToDo] Evaluate error rate (in %) when 
   # comparing scores-based predictions with true yval
-  error = 100 * (1 - mean(max.col(scores) == (yval+1)))
+  error = 100 * (1 - mean(.Internal(max.col(scores, 1)) == (yval+1)))
   
   return(error)
 }
