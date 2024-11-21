@@ -33,7 +33,7 @@ loss_grad_scores <- function(y, scores, K){
   n = length(y)
   # [ToDo] Calculate loss when lambda = 0
   expScores = exp(scores)
-  probs = expScores / rowSums(expScores)
+  probs = expScores / .Internal(rowSums(expScores, n, K, K))
   
   # # Sometimes values in scores_true are too large and result in NaN in true_probs
   # # If this occurs, find NaN values and replace with 1
@@ -55,7 +55,7 @@ loss_grad_scores <- function(y, scores, K){
   # scores are less likely to have "tie breakers" needed
   # not a perfect solution, sometimes tie breakers are still needed
   # "tie breakers" are done by selecting the first column containing the minimal value
-  error = 100 * (1 - mean(.Internal(max.col(scores, 1)) == (y+1)))
+  error = 100 * (1 - .Internal(mean(.Internal(max.col(scores, 1)) == (y+1))))
   
   grad = probs
   
@@ -65,6 +65,8 @@ loss_grad_scores <- function(y, scores, K){
   }
   
   grad = grad/n
+  
+  
   
   
   # Return loss, gradient and misclassification error on training (in %)
@@ -111,14 +113,13 @@ loss_grad_scores_2 <- function(y, scores, K){
   # but "table(y)/n" will not make a save counts of classifications that does
   # not appear
   # Ex: if y = c(0,0,2,3,4), then table(y)/n gives ".4 .2 .2 .2" instead of ".4 0 .2 .2 .2"
+  # Ymat <- 0 + outer(y, 1:K, function(a, b) a == b)
   
   grad = probs/n
-  
-  n.inv = 1/n
-  
+
   for (i in 1:K) {
     idx = y == (i-1)
-    grad[idx,i] <- grad[idx,i] - n.inv
+    grad[idx,i] <- grad[idx,i] - 1/n
   }
   
   
@@ -228,7 +229,7 @@ evaluate_error <- function(Xval, yval, W1, b1, W2, b2){
   
   # [ToDo] Evaluate error rate (in %) when 
   # comparing scores-based predictions with true yval
-  error = 100 * (1 - mean(.Internal(max.col(scores, 1)) == (yval+1)))
+  error = 100 * (1 - .Internal(mean(.Internal(max.col(scores, 1)) == (yval+1))))
   
   return(error)
 }
@@ -312,3 +313,5 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
   # Return end result
   return(list(error = error, error_val = error_val, params =  list(W1 = W1, b1 = b1, W2 = W2, b2 = b2)))
 }
+
+
