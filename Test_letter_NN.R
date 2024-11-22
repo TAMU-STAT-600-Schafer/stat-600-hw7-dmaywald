@@ -39,6 +39,7 @@ plot(out$error_test, type = 'o') # around 25 if keep training
 out2 = NN_train(Xtrain, Ytrain, Xval, Yval, lambda = 0.001,
                 rate = 0.1, mbatch = 50, nEpoch = 150,
                 hidden_p = 100, scale = 1e-3, seed = 12345)
+
 plot(1:length(out2$error), out2$error, ylim = c(0, 70))
 lines(1:length(out2$error_val), out2$error_val, col = "red")
 
@@ -183,8 +184,8 @@ rate = grid_results$rate[best_param_row]
 ###################### Results of best model ###################################
 
 out_best = NN_train(Xtrain, Ytrain, Xval, Yval, lambda = lambda,
-                rate = rate, mbatch = 35, nEpoch = 200,
-                hidden_p = hidden_p, scale = 1e-3, seed = 12345)
+                    rate = rate, mbatch = 35, nEpoch = 200,
+                    hidden_p = hidden_p, scale = 1e-3, seed = 12345)
 
 
 plot(1:length(out5$error), out5$error, ylim = c(0, 70))

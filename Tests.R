@@ -30,8 +30,8 @@ for (i in 1:5) {
     sd_val = runif(1, 1, 3)
     drop_out_rate = runif(1, .5, .9)
     
-    params <- gen_data(p = p, hidden_p = hidden_p, K = K, n = n,
-                       sd_val = sd_val, drop_out_rate = drop_out_rate)
+    params = gen_data(p = p, hidden_p = hidden_p, K = K, n = n,
+                      sd_val = sd_val, drop_out_rate = drop_out_rate)
     
     out = loss_grad_scores(params$y, scores = params$scores_true, K = K)
     
@@ -43,8 +43,8 @@ for (i in 1:5) {
     
     # Expect that when we take scores of the opposite sign, the loss and error increases
     opp_out = loss_grad_scores(params$y, scores = -params$scores_true, K)
-    expect_lte(out$loss , opp_out$loss)
-    expect_lte(out$error , opp_out$error)
+    expect_lte(out$loss, opp_out$loss)
+    expect_lte(out$error, opp_out$error)
     
     # Expect that the gradient is larger (in absolute value) on average when comparing scores_true to -1*scores_true
     # (really it's because gradient = (scores - one_hot(y))/n
@@ -62,8 +62,8 @@ n = 50
 sd_val = 2
 drop_out_rate = .5
 
-params <- gen_data(p = p, hidden_p = hidden_p, K = K, n = n,
-                   sd_val = sd_val, drop_out_rate = drop_out_rate)
+params = gen_data(p = p, hidden_p = hidden_p, K = K, n = n,
+                  sd_val = sd_val, drop_out_rate = drop_out_rate)
 
 expect_true(max(abs(
   loss_grad_scores(params$y, scores = params$scores_true, K = K)$grad -
@@ -126,13 +126,13 @@ sd_val = 2
 drop_out_rate = .5
 lambda = .01
 
-params <- gen_data(p = p, hidden_p = hidden_p, K = K, n = n,
-                   sd_val = sd_val, drop_out_rate = drop_out_rate)
+params = gen_data(p = p, hidden_p = hidden_p, K = K, n = n,
+                  sd_val = sd_val, drop_out_rate = drop_out_rate)
 pass1 = one_pass(X = params$X, y = params$y, K =  K, W1 = params$W1_true,
                  b1 = params$b1_true, W2 = params$W2_true, b2 = params$b2_true, lambda = lambda)
 
 pass2 = one_pass_2(X = params$X, y = params$y, K =  K, W1 = params$W1_true,
-                 b1 = params$b1_true, W2 = params$W2_true, b2 = params$b2_true, lambda = lambda)
+                   b1 = params$b1_true, W2 = params$W2_true, b2 = params$b2_true, lambda = lambda)
 
 expect_true(all(
   max(abs(pass1$grads$dW1 - pass2$grads$dW1)) < 1e-10,
@@ -157,12 +157,13 @@ for (i in 1:5) {
     hidden_p = round(runif(1, 5, 20))
     K = round(runif(1, 5, 10))
     n = round(runif(1, 100, 500))
+    nval = round(.2 * n)
     sd_val = runif(1, 1, 3)
     drop_out_rate = runif(1, .5, .9)
     lambda = runif(1, 1e-4, 9e-2)
     
-    params <- gen_data(p = p, hidden_p = hidden_p, K = K, n = n,
-                       sd_val = sd_val, drop_out_rate = drop_out_rate, nval = nval)
+    params = gen_data(p = p, hidden_p = hidden_p, K = K, n = n,
+                      sd_val = sd_val, drop_out_rate = drop_out_rate, nval = nval)
     
     out = NN_train(X = params$X, y = params$y, Xval = params$Xval, yval = params$yval,
                    lambda = lambda, rate = .1, mbatch = 20, nEpoch = 100,
@@ -172,8 +173,9 @@ for (i in 1:5) {
     
     # Regress log(error) on epochs and look at slope coefficient. 
     # If slope coefficient is negative, then error goes down over epochs
-    model_mat <- cbind(1, 1:length(out$error))
-    expect_true(solve(crossprod(model_mat), crossprod(model_mat, log(out$error)))[2] < 0)
+    model_mat = cbind(1, 1:length(out$error))
+    regression_coeff = solve(crossprod(model_mat), crossprod(model_mat, log(out$error)))
+    expect_true(regression_coeff[2] < 0)
   })
 }
 

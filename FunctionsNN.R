@@ -44,7 +44,7 @@ loss_grad_scores <- function(y, scores, K){
   loss = 0
   
   for (i in 1:K) {
-    loss = loss + sum(log(probs[y == (i-1), i]))
+    loss = loss + sum(log(probs[y == (i - 1), i]))
   }
   
   loss = -1 * (loss/n)
@@ -55,16 +55,16 @@ loss_grad_scores <- function(y, scores, K){
   # scores are less likely to have "tie breakers" needed
   # not a perfect solution, sometimes tie breakers are still needed
   # "tie breakers" are done by selecting the first column containing the minimal value
-  error = 100 * (1 - .Internal(mean(.Internal(max.col(scores, 1)) == (y+1))))
+  error = 100 * (1 - .Internal(mean(.Internal(max.col(scores, 1)) == (y + 1))))
   
   grad = probs
   
   for (i in 1:K) {
-    idx = y == (i-1)
-    grad[idx,i] <- grad[idx,i] - 1
+    idx = y == (i - 1)
+    grad[idx, i] <- grad[idx, i] - 1
   }
   
-  grad = grad/n
+  grad = grad / n
   
   
   
@@ -90,10 +90,10 @@ loss_grad_scores_2 <- function(y, scores, K){
   loss = 0
   
   for (i in 1:K) {
-    loss = loss + sum(log(probs[y == (i-1), i]))
+    loss = loss + sum(log(probs[y == (i - 1), i]))
   }
   
-  loss = -1 * (loss/n)
+  loss = -1 * (loss / n)
   
   # [ToDo] Calculate misclassification error rate (%)
   # when predicting class labels using scores versus true y
@@ -103,7 +103,7 @@ loss_grad_scores_2 <- function(y, scores, K){
   # "tie breakers" are done by selecting the first column containing the minimal value
   # error = 100 * (1 - mean(max.col(scores) == (y+1)))
   
-  error = 100 * (1 - mean(.Internal(max.col(scores, 1)) == (y+1)))
+  error = 100 * (1 - mean(.Internal(max.col(scores, 1)) == (y + 1)))
   
   
   # [ToDo] Calculate gradient of loss with respect to scores (output)
@@ -118,8 +118,8 @@ loss_grad_scores_2 <- function(y, scores, K){
   grad = probs/n
 
   for (i in 1:K) {
-    idx = y == (i-1)
-    grad[idx,i] <- grad[idx,i] - 1/n
+    idx = y == (i - 1)
+    grad[idx, i] <- grad[idx, i] - 1 / n
   }
   
   
@@ -156,19 +156,21 @@ one_pass <- function(X, y, K, W1, b1, W2, b2, lambda){
   out = loss_grad_scores(y, scores, K)
   
   # Get gradient for 2nd layer W2, b2 (use lambda as needed)
-  dW2 = crossprod(H, out$grad) + lambda*W2
+  dW2 = crossprod(H, out$grad) + lambda * W2
   db2 = colSums(out$grad)
   
   # Get gradient for hidden, and 1st layer W1, b1 (use lambda as needed)
   dH  = tcrossprod(out$grad, W2)
   dH[idx] = 0
-  dW1 = crossprod(X, dH) + lambda*W1
+  dW1 = crossprod(X, dH) + lambda * W1
   db1 = colSums(dH)
   
   
   # Return output (loss and error from forward pass,
   # list of gradients from backward pass)
-  return(list(loss = out$loss, error = out$error, grads = list(dW1 = dW1, db1 = db1, dW2 = dW2, db2 = db2)))
+  return(list(loss = out$loss,
+              error = out$error,
+              grads = list(dW1 = dW1, db1 = db1, dW2 = dW2, db2 = db2)))
 }
 
 one_pass_2 <- function(X, y, K, W1, b1, W2, b2, lambda){
@@ -192,19 +194,21 @@ one_pass_2 <- function(X, y, K, W1, b1, W2, b2, lambda){
   out = loss_grad_scores(y, scores, K)
   
   # Get gradient for 2nd layer W2, b2 (use lambda as needed)
-  dW2 = crossprod(H, out$grad) + lambda*W2
+  dW2 = crossprod(H, out$grad) + lambda * W2
   db2 = colSums(out$grad)
   
   # Get gradient for hidden, and 1st layer W1, b1 (use lambda as needed)
   dH  = tcrossprod(out$grad, W2)
   dH[idx] = 0
-  dW1 = crossprod(X, dH) + lambda*W1
+  dW1 = crossprod(X, dH) + lambda * W1
   db1 = colSums(dH)
   
   
   # Return output (loss and error from forward pass,
   # list of gradients from backward pass)
-  return(list(loss = out$loss, error = out$error, grads = list(dW1 = dW1, db1 = db1, dW2 = dW2, db2 = db2)))
+  return(list(loss = out$loss,
+              error = out$error,
+              grads = list(dW1 = dW1, db1 = db1, dW2 = dW2, db2 = db2)))
 }
 
 # Function to evaluate validation set error
@@ -229,7 +233,7 @@ evaluate_error <- function(Xval, yval, W1, b1, W2, b2){
   
   # [ToDo] Evaluate error rate (in %) when 
   # comparing scores-based predictions with true yval
-  error = 100 * (1 - .Internal(mean(.Internal(max.col(scores, 1)) == (yval+1))))
+  error = 100 * (1 - .Internal(mean(.Internal(max.col(scores, 1)) == (yval + 1))))
   
   return(error)
 }
@@ -253,7 +257,7 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
                      hidden_p = 20, scale = 1e-3, seed = 12345){
   # Get sample size and total number of batches
   n = length(y)
-  nBatch = floor(n/mbatch)
+  nBatch = floor(n / mbatch)
   K = max(c(y, yval)) + 1
 
   # [ToDo] Initialize b1, b2, W1, W2 using initialize_bw with seed as seed,
@@ -280,7 +284,7 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
   # Set seed for reproducibility
   set.seed(seed)
   # Start iterations
-  for (i in 1:nEpoch){
+  for (i in 1:nEpoch) {
     # Allocate bathes
     batchids = sample(rep(1:nBatch, length.out = n), size = n)
     # Accumulate error over batches, and compute average
@@ -305,13 +309,15 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
     # print(pass$grads$db2)
     # [ToDo] In the end of epoch, evaluate
     # - average training error across batches
-    error[i] = cur_err/nBatch
+    error[i] = cur_err / nBatch
     # - validation error using evaluate_error function
     error_val[i] = evaluate_error(Xval, yval, W1, b1, W2, b2)
   }
   
   # Return end result
-  return(list(error = error, error_val = error_val, params =  list(W1 = W1, b1 = b1, W2 = W2, b2 = b2)))
+  return(list(error = error,
+              error_val = error_val,
+              params =  list(W1 = W1, b1 = b1, W2 = W2, b2 = b2)))
 }
 
 
