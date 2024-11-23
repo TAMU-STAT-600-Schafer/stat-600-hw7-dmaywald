@@ -86,8 +86,8 @@ for(i in 1:5){
     drop_out_rate = runif(1, .5, .9)
     lambda = runif(1, 1e-4, 9e-2)
     
-    params <- gen_data(p = p, hidden_p = hidden_p, K = K, n = n,
-                       sd_val = sd_val, drop_out_rate = drop_out_rate)
+    params = gen_data(p = p, hidden_p = hidden_p, K = K, n = n,
+                      sd_val = sd_val, drop_out_rate = drop_out_rate)
     
     pass = one_pass(X = params$X, y = params$y, K =  K, W1 = params$W1_true,
                     b1 = params$b1_true, W2 = params$W2_true, b2 = params$b2_true, lambda = lambda)

@@ -188,12 +188,12 @@ out_best = NN_train(Xtrain, Ytrain, Xval, Yval, lambda = lambda,
                     hidden_p = hidden_p, scale = 1e-3, seed = 12345)
 
 
-plot(1:length(out5$error), out5$error, ylim = c(0, 70))
-lines(1:length(out5$error_val), out5$error_val, col = "red")
+plot(1:length(out_best$error), out5$error, ylim = c(0, 70))
+lines(1:length(out_best$error_val), out5$error_val, col = "red")
 
 # Train/Validation Error
-mean(tail(out5$error)) # 0.0
-mean(tail(out5$error_val)) # 11.5
+mean(tail(out_best$error)) # 0.0
+mean(tail(out_best$error_val)) # 11.5
 
-test_error = evaluate_error(Xt, Yt, out5$params$W1, out5$params$b1, out5$params$W2, out5$params$b2)
+test_error = evaluate_error(Xt, Yt, out_best$params$W1, out_best$params$b1, out_best$params$W2, out_best$params$b2)
 test_error # 12.12222
